@@ -75,9 +75,10 @@ export default function Recommendations() {
     const file = e.target.files[0]
     if (!file) return
     try {
-      await uploadClothing(file)
+      const res = await uploadClothing(file)
+      const items = Array.isArray(res.data) ? res.data : [res.data]
       await refreshWardrobe()
-      toast('piece added to your closet')
+      toast(items.length > 1 ? `added ${items.length} pieces` : `piece added · ${items[0].item_name}`)
     } catch (err) {
       toast(err.response?.data?.detail || 'upload failed')
     }

@@ -79,22 +79,43 @@ def analyze_clothing(image_path: str) -> dict:
     try:
         img = load_image(image_path)
         prompt = (
-            "Analyze this clothing item image carefully. "
-            "Return ONLY a valid JSON object with exactly these keys:\n"
+            "Analyze this image carefully. It may contain one or multiple clothing items or a full outfit on a person.\n"
+            "Identify EVERY distinct clothing item visible: tops, bottoms, jackets, outerwear, footwear, accessories.\n"
+            "Return ONLY a valid JSON object with exactly this structure:\n"
             '{\n'
-            '  "category": "Top" | "Bottom" | "Footwear" | "Accessory",\n'
-            '  "item_name": "descriptive name e.g. White Linen Shirt",\n'
-            '  "color": "primary color",\n'
-            '  "pattern": "Solid" | "Striped" | "Checkered" | "Floral" | "Printed" | "Other",\n'
-            '  "style": "Casual" | "Formal" | "Ethnic" | "Streetwear" | "Minimalist" | "Sportswear"\n'
+            '  "items": [\n'
+            '    {\n'
+            '      "category": "Top" | "Bottom" | "Footwear" | "Accessory",\n'
+            '      "item_name": "descriptive name e.g. Blue Denim Jacket",\n'
+            '      "color": "primary color",\n'
+            '      "pattern": "Solid" | "Striped" | "Checkered" | "Floral" | "Printed" | "Other",\n'
+            '      "style": "Casual" | "Formal" | "Ethnic" | "Streetwear" | "Minimalist" | "Sportswear"\n'
+            '    }\n'
+            '  ]\n'
             '}\n'
+            "Rules:\n"
+            "- A jacket or outerwear worn open over a top counts as a separate Top item.\n"
+            "- Include ALL visible items — do not skip bottoms, shoes, or layered pieces.\n"
+            "- If only one item is visible, return an array with one object.\n"
             "Do not include any explanation, markdown, or code fences. Return raw JSON only."
         )
         text = _generate_with_image(prompt, img)
         result = safe_parse(text)
+
+        # Normalise categories in all items
+        if "items" in result and isinstance(result["items"], list):
+            for item in result["items"]:
+                if "category" in item:
+                    item["category"] = normalize_category(item["category"])
+            return result
+
+        # Fallback: if Gemini returned the old single-item shape, wrap it
         if "category" in result:
             result["category"] = normalize_category(result["category"])
-        return result
+            return {"items": [result]}
+
+        return {"error": "Unexpected response shape", "raw": text}
+
     except Exception as e:
         raise RuntimeError(f"Gemini clothing analysis failed: {str(e)}")
 

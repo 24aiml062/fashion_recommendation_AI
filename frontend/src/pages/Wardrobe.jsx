@@ -64,12 +64,20 @@ export default function Wardrobe() {
     setUploading(true)
     try {
       const res = await uploadClothing(file)
-      const item = res.data
+      // API now returns an array of detected items
+      const items = Array.isArray(res.data) ? res.data : [res.data]
       await refreshWardrobe()
-      if (item.category === 'Other') {
-        toast('added — category unclear, tap edit to fix it')
+
+      if (items.length === 1) {
+        const item = items[0]
+        if (item.category === 'Other') {
+          toast('added — category unclear, tap edit to fix it')
+        } else {
+          toast(`added · ${item.item_name}`)
+        }
       } else {
-        toast(`added · ${item.item_name}`)
+        const names = items.map((i) => i.item_name).join(', ')
+        toast(`added ${items.length} items · ${names}`)
       }
     } catch (err) {
       toast(err.response?.data?.detail || 'upload failed')

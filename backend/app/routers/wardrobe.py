@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from typing import List
 from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.schemas.schemas import WardrobeItemResponse, WardrobeGroupedResponse, WardrobeItemUpdate
@@ -9,8 +10,8 @@ from app.services.image_utils import validate_and_save_image
 router = APIRouter(tags=["Wardrobe"])
 
 
-@router.post("/upload-clothing", response_model=WardrobeItemResponse,
-             summary="Upload a clothing image and analyze it with AI")
+@router.post("/upload-clothing", response_model=List[WardrobeItemResponse],
+             summary="Upload a clothing image — detects and saves all visible items")
 async def upload_clothing(file: UploadFile = File(...), db: Session = Depends(get_db)):
     image_path = await validate_and_save_image(file)
 
@@ -24,15 +25,24 @@ async def upload_clothing(file: UploadFile = File(...), db: Session = Depends(ge
     if "error" in result:
         raise HTTPException(503, "AI service is currently unavailable. Please try again.")
 
-    return wardrobe_service.save_wardrobe_item(
-        db=db,
-        image_path=image_path,
-        category=result.get("category", "Top"),
-        item_name=result.get("item_name", "Unknown Item"),
-        color=result.get("color", "Unknown"),
-        pattern=result.get("pattern", "Solid"),
-        style=result.get("style", "Casual"),
-    )
+    items_data = result.get("items", [])
+    if not items_data:
+        raise HTTPException(503, "AI service is currently unavailable. Please try again.")
+
+    # Save every detected item — all share the same uploaded image
+    saved = []
+    for item in items_data:
+        saved.append(wardrobe_service.save_wardrobe_item(
+            db=db,
+            image_path=image_path,
+            category=item.get("category", "Other"),
+            item_name=item.get("item_name", "Unknown Item"),
+            color=item.get("color", "Unknown"),
+            pattern=item.get("pattern", "Solid"),
+            style=item.get("style", "Casual"),
+        ))
+
+    return saved
 
 
 @router.get("/wardrobe", response_model=WardrobeGroupedResponse,
