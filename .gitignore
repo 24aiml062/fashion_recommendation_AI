@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment variables — NEVER commit secrets
+backend/.env
+
+# SQLite database
+backend/fashion_copilot.db
+
+# Uploaded images (user data, not source code)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Test files
+backend/testgemini.py
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Vite build output
+frontend/dist/
+frontend/.vite/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
