@@ -123,6 +123,22 @@ export default function Wardrobe() {
 
       <SeamDivider />
 
+      {/* Upload button — always visible */}
+      <button
+        onClick={() => fileRef.current?.click()}
+        disabled={uploading}
+        className="w-full flex items-center justify-center gap-2 bg-ink text-canvas font-mono text-xs uppercase tracking-wide rounded-full py-3 hover:bg-thread-dark active:scale-[0.97] transition-all disabled:opacity-60 mb-5"
+      >
+        {uploading ? (
+          <>
+            <span className="animate-wiggle inline-block">✂</span>
+            reading your piece…
+          </>
+        ) : (
+          '+ add a piece'
+        )}
+      </button>
+
       {/* Filter chips */}
       <div className="mb-4">
         <OccasionChips
@@ -135,10 +151,10 @@ export default function Wardrobe() {
 
       {/* Grid */}
       {allItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+        <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
           <p className="font-serif text-xl font-medium text-ink">nothing here yet</p>
           <p className="font-mono text-[10px] uppercase text-muted">
-            {filter === 'all' ? 'add your first piece below' : `no ${filter} in your closet`}
+            {filter === 'all' ? 'tap the button above to add your first piece' : `no ${filter} in your closet`}
           </p>
         </div>
       ) : (
@@ -154,14 +170,6 @@ export default function Wardrobe() {
             />
           ))}
           <AddPieceCard onClick={() => fileRef.current?.click()} />
-        </div>
-      )}
-
-      {/* Upload loading indicator */}
-      {uploading && (
-        <div className="flex items-center gap-2 mt-4 text-sm text-muted">
-          <span className="animate-wiggle inline-block text-thread">✂</span>
-          <span className="font-mono text-[11px] uppercase">reading your piece…</span>
         </div>
       )}
 
