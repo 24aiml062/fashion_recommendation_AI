@@ -15,9 +15,18 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="AI Fashion Copilot")
 
+# Build allowed origins list from environment.
+# CORS_ORIGINS env var accepts a comma-separated list of URLs, e.g.:
+#   http://localhost:5173,https://your-app.vercel.app
+_raw_origins = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:5173,http://localhost:3000",
+)
+allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
